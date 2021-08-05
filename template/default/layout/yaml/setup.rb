@@ -7,7 +7,6 @@ def init
 
   @constants = @object.children.select { |child| child.type == :constant }
   @references = @object.children.reject { |child| [:method, :constant].include? child.type }
-  @children = @constants + @references
   @object_text = ERB.new(File.read"#{__dir__}/_object.erb").result binding
 
   @method_text = @method_list.map { |method|
@@ -22,9 +21,9 @@ def init
   }.join("\n")
 
   if @references.empty?
-    @reference_text = "[]"
+    @reference_text = "references: []"
   else
-    @reference_text = "\n" + @references.map { |reference|
+    @reference_text = "references:\n" + @references.map { |reference|
       @reference = reference
       ERB.new(File.read "#{__dir__}/_reference.erb").result binding
     }.join("\n")
@@ -55,7 +54,6 @@ end
 def children_list
   return @children_list if @children_list
 
-  
   @children_list = object_methods(@object)
   @children_list += @object.children.reject { |child| [:method, :constant].include? child.type }
   @children_list
@@ -68,7 +66,11 @@ def children_text
   else
     out = "\n"
     out += children_list.map { |child|
-      "      - #{child.path}"
+      if child.type == :method
+        child.path.include?("#") ? "  - #{child.path}(instance)" : "  - #{child.path}(class)"
+      else
+        "  - #{child.path}"
+      end
     }.join("\n")
     out
   end

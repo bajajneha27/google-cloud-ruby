@@ -8,7 +8,7 @@ def init
   sections :toc
 end
 
-def populate_items obj, text, indent = "    "
+def populate_items obj, text, indent = "  "
   text << "#{indent}- uid: #{obj.path}"
   text << "#{indent}  name: #{obj.name}"
   children = obj.children.reject { |child| [:method, :constant].include? child.type }

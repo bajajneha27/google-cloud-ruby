@@ -3,14 +3,20 @@ def docstring obj
   str = pre_format obj.docstring.to_str
 end
 
-def pre_format str
+def escapes str
   str = str.gsub /(?!\\)"/, '\"'
-  str = str.gsub /(?!\\)\n/, '\n'
+  str.gsub /(?!\\)\n/, '\n'
+end
+
+def pre_format str
+  str = str.to_s
+  str = escapes str
   str = codeblock_space str
   str = str.gsub("\\\\{", "{").gsub "\\{", "{"
   str = str.gsub("\\\\}", "}").gsub "\\}", "}"
   str = demote_headers str
   str = fix_links str
+  str = normalize_links str
   str
 end
 
@@ -56,7 +62,7 @@ def fix_links str
   str.gsub /http.*googleapis.dev\/ruby\/(google-cloud.*\))/, 'https://cloud.devsite.corp.google.com/ruby/docs/reference/\1'
 end
 
-def linkify str
+def normalize_links str
   out = ""
   match_list = []
   (0..str.length).each do |i|
@@ -123,7 +129,6 @@ def codeblock_space str
       i += 1
     end
   end
-
   return str.sub(end_cap, "") if match_list.empty?
 
   prev = 0
