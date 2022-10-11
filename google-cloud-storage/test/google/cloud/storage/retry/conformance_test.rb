@@ -17,22 +17,27 @@ require "net/http"
 require_relative "../../../../../conformance/v1/proto/google/cloud/conformance/storage/v1/tests_pb"
 require_relative "./utils.rb"
 
+Google::Apis.logger.level = Logger::DEBUG
+
+ENV["GOOGLE_APPLICATION_CREDENTIALS"] = "/usr/local/google/home/bajajnehaa/Downloads/sturdy-pier-323908-ee338621fd6e.json"
+ENV["GOOGLE_CLOUD_PROJECT"] = "sturdy-pier-323908"
+
 class ConformanceTest < MockStorage
 
   HOST = "http://localhost:9000/"
 
   def setup
-    storage.service.service.root_url = HOST
+    # storage.service.service.root_url = HOST
     create_resources
   end
 
   def create_resources
     @bucket = storage.create_bucket random_bucket_name, acl: acl,
                                     default_acl: acl
-    @hmac_key = storage.create_hmac_key storage.service_account_email
-    @hmac_key.inactive!
-    @notification = storage.service.insert_notification @bucket.name, pubsub_topic_name
-    @object = @bucket.create_file file_obj, file_name
+    # @hmac_key = storage.create_hmac_key storage.service_account_email
+    # @hmac_key.inactive!
+    # @notification = storage.service.insert_notification @bucket.name, pubsub_topic_name
+    # @object = @bucket.create_file file_obj, file_name
   end
 
   def self.run_tests test
@@ -49,6 +54,7 @@ class ConformanceTest < MockStorage
   end
 
   def self.run_test_case test_name, scenario, instructions, method, lib_func
+    focus
     define_method("test_#{test_name}") do
       expect_success = scenario.expectSuccess
 
@@ -76,7 +82,7 @@ class ConformanceTest < MockStorage
     end
 
     def delete_resources
-      storage.service.delete_hmac_key @hmac_key.access_id rescue nil
+      # storage.service.delete_hmac_key @hmac_key.access_id rescue nil
       files = @bucket.files rescue []
       files.each { |f| f.delete rescue nil }
       @bucket.delete rescue nil
@@ -105,6 +111,7 @@ class ConformanceTest < MockStorage
     headers = {"Content-Type" => "application/json"}
     data = {"instructions" => {method_name => instructions.to_a}}.to_json
     http = Net::HTTP.new uri.host, uri.port
+    http.set_debug_output($stdout)
     request = Net::HTTP::Post.new uri.request_uri, headers
     request.body = data
     http.request request
@@ -129,8 +136,8 @@ class ConformanceTest < MockStorage
   def run_retry_test id, lib_func, preconditions, resources
     storage.service.service.request_options.header["x-retry-test-id"] = id
     MethodMapping.send(lib_func, storage.service, preconditions, 
-                       bucket: @bucket, hmac_key: @hmac_key,
-                       notification: @notification, object: @object)
+                       bucket: @bucket, hmac_key: nil,
+                       notification: nil, object: nil)
   end
 
   # Delete the Retry Test resource by id.
@@ -159,7 +166,11 @@ test_file.retryTests.each do |test|
         instructions = c.instructions.join("_")
         test_name = [test.id, instructions, method_name, index].join("-")
         ConformanceTest.run_test_case test_name, test, c.instructions, method, lib_func
+        break
       end
+      break
     end
+    break
   end
+  break
 end

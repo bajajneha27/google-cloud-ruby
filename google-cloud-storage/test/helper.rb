@@ -39,9 +39,9 @@ module Google::Apis::Core::Hashable
 end
 
 class MockStorage < Minitest::Spec
-  let(:project) { "test" }
+  let(:project) { ENV["GOOGLE_CLOUD_PROJECT"] }
   let(:credentials) { OpenStruct.new(client: OpenStruct.new(updater_proc: Proc.new {})) }
-  let(:storage) { Google::Cloud::Storage::Project.new(Google::Cloud::Storage::Service.new(project, credentials)) }
+  let(:storage) { Google::Cloud::Storage.new(project_id: ENV['GOOGLE_CLOUD_PROJECT'], credentials: ENV['GOOGLE_APPLICATION_CREDENTIALS']) }
   let(:pubsub_topic_name) { "my-topic-name" }
   let(:file_obj) { StringIO.new("My test file") }
   let(:file_name) { "my_test_file.txt" }
